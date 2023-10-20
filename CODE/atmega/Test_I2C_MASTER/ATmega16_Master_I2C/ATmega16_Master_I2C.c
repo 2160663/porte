@@ -131,20 +131,20 @@ int main(void) {
 
 	return 0;
 }
-*/
-		
+
+*/		
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 ///////////// CODE AVEC CAPTEUR FENETRE (PAS SUR QUI FONCTIONNE) ///////////////////
-
-#define F_CPU 8000000UL                  /* Define CPU clock Frequency e.g. here its 8MHz */
-#include <avr/io.h>                      /* Include AVR std. library file */
-#include <util/delay.h>                  /* Include inbuilt defined Delay header file */
-#include "I2C_Master_H_file.h"           /* Include I2C header file */
+/*
+#define F_CPU 8000000UL                  // Define CPU clock Frequency e.g. here its 8MHz 
+#include <avr/io.h>                      // Include AVR std. library file 
+#include <util/delay.h>                  // Include inbuilt defined Delay header file 
+#include "I2C_Master_H_file.h"           // Include I2C header file 
 
 #define EEPROM_Write_Addess     0x20
 #define LED_PIN PB0 // Utilisez la broche PB0 pour la LED
-#define SENSOR_PIN PC0 // Utilisez la broche PC0 pour le capteur de fenêtre
+#define SENSOR_PIN PC0 // Utilisez la broche PC0 pour le capteur magnétique
 
 void initLED() {
 	// Configure la broche de la LED comme sortie
@@ -152,7 +152,7 @@ void initLED() {
 }
 
 int isWindowOpen() {
-	// Lisez l'état du capteur de fenêtre (ouvert ou fermé)
+	// Lisez l'état du capteur magnétique (fenêtre ouverte/fermée)
 	if (PINC & (1 << SENSOR_PIN)) {
 		return 1; // Fenêtre ouverte
 		} else {
@@ -173,21 +173,21 @@ void turnOffLED() {
 int main(void) {
 	char dataToSend = 'A'; // Donnée à envoyer
 
-	I2C_Init();                         /* Initialize I2C */
+	I2C_Init();                         // Initialize I2C
 	initLED();                          // Initialise la LED
 
-	// Configure la broche du capteur de fenêtre comme entrée
+	// Configure la broche du capteur magnétique comme entrée
 	DDRC &= ~(1 << SENSOR_PIN);
 	PORTC |= (1 << SENSOR_PIN); // Activer la résistance de rappel interne
 
 	while (1) {
-		// Vérifiez l'état du capteur de fenêtre
+		// Vérifiez l'état du capteur magnétique
 		if (isWindowOpen()) {
 			// Envoie la donnée via I2C
-			I2C_Start(EEPROM_Write_Addess); /* Start I2C with device write address */
-			I2C_Write(0x00);               /* Write start memory address for data write */
-			I2C_Write(dataToSend);         /* Envoie la donnée */
-			I2C_Stop();                    /* Stop I2C */
+			I2C_Start(EEPROM_Write_Addess); // Start I2C with device write address
+			I2C_Write(0x00);               // Write start memory address for data write
+			I2C_Write(dataToSend);         // Envoie la donnée
+			I2C_Stop();                    // Stop I2C
 
 			// Inverse la donnée pour l'envoi suivant
 			if (dataToSend == 'A') {
@@ -202,9 +202,91 @@ int main(void) {
 			turnOffLED();
 		}
 
-		// Attendez une seconde avant de vérifier à nouveau le capteur de fenêtre
-		_delay_ms(1000);
+		// Attendez un moment avant de vérifier à nouveau le capteur magnétique
+		_delay_ms(100);
 	}
 
 	return 0;
 }
+*/
+//////////////////////////////////////////////////////////////
+
+#define F_CPU 8000000UL                  // Define CPU clock Frequency e.g. here its 8MHz
+#include <avr/io.h>                      // Include AVR std. library file
+#include <util/delay.h>                  // Include inbuilt defined Delay header file
+#include "I2C_Master_H_file.h"           // Include I2C header file
+
+#define EEPROM_Write_Addess     0x20
+#define LED_PIN PB0 // Utilisez la broche PB0 pour la LED
+#define SENSOR_PIN PC0 // Utilisez la broche PC0 pour le capteur magnétique
+
+void initLED() {
+	// Configure la broche de la LED comme sortie
+	DDRB |= (1 << LED_PIN);
+}
+
+int isWindowOpen() {
+	// Lisez l'état du capteur magnétique (fenêtre ouverte/fermée)
+	if (PINC & (1 << SENSOR_PIN)) {
+		return 1; // Fenêtre ouverte
+		} else {
+		return 0; // Fenêtre fermée
+	}
+}
+
+void turnOnLED() {
+	// Allume la LED en mettant la broche à l'état bas (0)
+	PORTB &= ~(1 << LED_PIN);
+}
+
+void turnOffLED() {
+	// Éteint la LED en mettant la broche à l'état haut (1)
+	PORTB |= (1 << LED_PIN);
+}
+
+int main(void) {
+	char dataToSend = 'A'; // Donnée à envoyer
+
+	I2C_Init();                         // Initialize I2C
+	initLED();                          // Initialise la LED
+
+	// Configure la broche du capteur magnétique comme entrée
+	DDRC &= ~(1 << SENSOR_PIN);
+	PORTC |= (1 << SENSOR_PIN); // Activer la résistance de rappel interne
+
+	while (1) {
+		// Vérifiez l'état du capteur magnétique
+		if (isWindowOpen()) {
+			// Allume la LED pour indiquer que la fenêtre est ouverte
+			turnOnLED();
+
+			// Envoie la donnée via I2C
+			I2C_Start(EEPROM_Write_Addess); // Start I2C with device write address
+			I2C_Write(0x20);               // Write start memory address for data write
+			I2C_Write(dataToSend);         // Envoie la donnée
+			I2C_Stop();                    // Stop I2C
+			
+			_delay_ms(100);
+			turnOffLED();
+		} 
+		else {
+			// Éteint la LED si la fenêtre est fermée
+			turnOffLED();
+		}
+	
+		// Attendez un moment avant de vérifier à nouveau le capteur magnétique
+		_delay_ms(500);
+	}
+
+	return 0;
+}
+
+
+/*------------ AU CAS OÙ ----------------
+// Inverse la donnée pour l'envoi suivant
+//if (dataToSend == 'A') {
+//	dataToSend = 'B';
+//	} else {
+//	dataToSend = 'A';
+//}
+----------------------------------------*/

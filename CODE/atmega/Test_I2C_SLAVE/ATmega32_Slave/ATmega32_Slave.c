@@ -99,7 +99,8 @@ int main(void)
 				
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-///////////// CODE SALVE FOCNTIONNEL/////////////////// 
+///////////// CODE SALVE FONCTIONNEL/////////////////// 
+
 
 #define F_CPU 8000000UL              // Define CPU clock Frequency e.g. here it's 8MHz 
 #include <avr/io.h>                  // Include AVR std. library file 
@@ -166,4 +167,77 @@ int main(void) {
 
 
 ///////////////////////////////////////////////////////////////////////////////
+//----------------------------- PAS FONCTIONNEL --------------------------
+/*
+#define F_CPU 8000000UL              // Define CPU clock Frequency e.g. here it's 8MHz
+#include <avr/io.h>                  // Include AVR std. library file
+#include <util/delay.h>              // Include inbuilt defined Delay header file
+#include "I2C_Slave_H_File.h"        // Include I2C slave header file
+#include <avr/interrupt.h>           // Bibliothèque pour gérer les interruptions
 
+#define Slave_Address    0x20
+#define LED_PIN PB0 // Utilisez la broche PB0 pour la LED (personnalisez selon votre configuration matérielle)
+
+// Drapeau (flag) pour indiquer si des données ont été reçues
+volatile uint8_t dataReceived = 0;
+
+void initLED() {
+	// Configure la broche de la LED comme sortie
+	DDRB |= (1 << LED_PIN);
+}
+
+void turnOnLED() {
+	// Allume la LED en mettant la broche à l'état bas (0)
+	PORTB &= ~(1 << LED_PIN);
+}
+
+void turnOffLED() {
+	// Éteint la LED en mettant la broche à l'état haut (1)
+	PORTB |= (1 << LED_PIN);
+}
+
+int main(void) {
+	initLED(); // Initialise la LED
+	I2C_Slave_Init(Slave_Address);
+	// Activer les interruptions
+	sei();
+
+	while (1) {
+		switch (I2C_Slave_Listen()) {
+			case 0: {
+				// Réception de données
+				int8_t count = 0;
+
+				do {
+					count = I2C_Slave_Receive();              // Receive data byte
+				} while (count != -1);                        // Receive until STOP/REPEATED START received
+
+				// Allumer la LED lors de la réception
+				turnOnLED();
+				//_delay_ms(100);                // Allumée pendant 0.1 seconde
+				//turnOffLED();
+
+				// Définir le drapeau pour indiquer que des données ont été reçues
+				dataReceived = 1;
+				break;
+			}
+			case 1: {
+				int8_t Ack_status;
+
+				do {
+					Ack_status = I2C_Slave_Transmit(0);                // Send 0 as acknowledgment
+				} while (Ack_status == 0);            // Send until Acknowledgment is received
+				break;
+			}
+			default:
+			// Aucune donnée reçue, éteignez la LED si aucun données n'ont été reçues
+			if (!dataReceived) {
+				turnOffLED();
+			}
+			// Réinitialiser le drapeau de réception de données
+			dataReceived = 0;
+			break;
+		}
+	}
+}
+*/
